@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时区转换工具 / Time Zone Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background:
+                radial-gradient(900px 600px at 15% 12%, rgba(124, 92, 255, 0.35) 0%, rgba(124, 92, 255, 0) 55%),
+                radial-gradient(900px 600px at 85% 18%, rgba(0, 212, 255, 0.22) 0%, rgba(0, 212, 255, 0) 55%),
+                radial-gradient(700px 500px at 50% 85%, rgba(255, 0, 128, 0.14) 0%, rgba(255, 0, 128, 0) 60%),
+                linear-gradient(135deg, #05070c 0%, #0b0f1a 55%, #060815 100%);
+            min-height: 100vh;
+            padding: 72px 22px 22px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: rgba(255,255,255,0.94);
+            margin-bottom: 28px;
+            font-size: 2.45em;
+            text-shadow: 0 18px 55px rgba(0,0,0,0.55);
+            letter-spacing: 0.3px;
+        }
+
+        .section {
+            background: rgba(18, 20, 30, 0.55);
+            border-radius: 18px;
+            padding: 30px;
+            margin-bottom: 26px;
+            box-shadow: 0 26px 80px rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.10);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .section h2 {
+            margin-bottom: 18px;
+            color: rgba(255,255,255,0.92);
+            font-size: 1.45em;
+            letter-spacing: 0.2px;
+        }
+
+        .time-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .time-card {
+            background: rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.92);
+            padding: 22px;
+            border-radius: 18px;
+            text-align: center;
+            box-shadow:
+                0 28px 70px rgba(0,0,0,0.55),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .time-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.18);
+            box-shadow:
+                0 34px 90px rgba(0,0,0,0.62),
+                inset 0 1px 0 rgba(255,255,255,0.10);
+        }
+
+        .time-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .tz-tag {
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 0.75em;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.14);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+
+        .tz-tag.dst {
+            background: rgba(255, 193, 7, 0.16);
+            border-color: rgba(255, 193, 7, 0.28);
+        }
+
+        .tz-tag.std {
+            background: rgba(100, 181, 246, 0.16);
+            border-color: rgba(100, 181, 246, 0.28);
+        }
+
+        .time-card h3 {
+            font-size: 1.15em;
+            margin-bottom: 0;
+            opacity: 0.92;
+        }
+
+        .time-card .time {
+            font-size: 2.05em;
+            font-weight: 800;
+            margin: 10px 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+            text-shadow: 0 18px 50px rgba(0,0,0,0.55);
+            letter-spacing: 0.02em;
+        }
+
+        .time-card .date {
+            font-size: 0.9em;
+            opacity: 0.82;
+            margin-top: 6px;
+        }
+
+        .time-card .timezone {
+            font-size: 0.85em;
+            opacity: 0.75;
+            margin-top: 6px;
+        }
+
+        .converter {
+            display: grid;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group label {
+            font-weight: 700;
+            color: rgba(255,255,255,0.86);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1.5fr 1.2fr 1fr;
+            gap: 15px;
+        }
+
+        .date-time-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 12px;
+            font-size: 1em;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        input::placeholder {
+            color: rgba(255,255,255,0.45);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: rgba(124, 92, 255, 0.7);
+            box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.22);
+        }
+
+        button {
+            background:
+                radial-gradient(120% 120% at 20% 0%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 55%),
+                linear-gradient(135deg, rgba(124, 92, 255, 0.95) 0%, rgba(0, 212, 255, 0.75) 120%);
+            color: rgba(255,255,255,0.95);
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 12px 30px;
+            border-radius: 14px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 800;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.45);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.03);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 18px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 14px;
+            display: none;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.10);
+            color: rgba(255,255,255,0.86);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item strong {
+            color: rgba(255,255,255,0.92);
+        }
+
+        .dst-indicator {
+            font-size: 0.8em;
+            color: #ff6b6b;
+            margin-left: 5px;
+        }
+
+
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 56px;
+            }
+
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+
+            .date-time-group {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .time-display {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .tz-tag {
+                font-size: 0.72em;
+                padding: 3px 8px;
+            }
+        }
+
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .input-row {
+                grid-template-columns: 1.5fr 1.2fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 时区转换工具 / Time Zone Converter</h1>
+
+        <div class="section">
+            <h2>实时时间显示 / Live Time</h2>
+            <div class="time-display">
+                <div class="time-card" id="shanghai-card">
+                    <h3>🇨🇳 上海 / Shanghai</h3>
+                    <div class="time" id="shanghai-time">--:--:--</div>
+                    <div class="date" id="shanghai-date">--</div>
+                    <div class="timezone" id="shanghai-tz">Asia/Shanghai</div>
+                </div>
+                <div class="time-card" id="ny-card">
+                    <div class="time-card-header">
+                        <h3>🇺🇸 纽约 / New York</h3>
+                        <div class="tz-tag" id="ny-dst-tag">--</div>
+                    </div>
+                    <div class="time" id="ny-time">--:--:--</div>
+                    <div class="date" id="ny-date">--</div>
+                    <div class="timezone" id="ny-tz">America/New_York</div>
+                </div>
+                <div class="time-card" id="sf-card">
+                    <div class="time-card-header">
+                        <h3>🇺🇸 旧金山 / San Francisco</h3>
+                        <div class="tz-tag" id="sf-dst-tag">--</div>
+                    </div>
+                    <div class="time" id="sf-time">--:--:--</div>
+                    <div class="date" id="sf-date">--</div>
+                    <div class="timezone" id="sf-tz">America/Los_Angeles</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>时间转换器 / Time Converter</h2>
+            <div class="converter">
+                <div class="input-group">
+                    <label>输入时间 / Input time：</label>
+                    <div class="input-row">
+                        <div class="date-time-group">
+                            <input type="date" id="input-date" />
+                            <input type="time" id="input-time" />
+                        </div>
+                        <select id="input-timezone">
+                            <option value="Asia/Shanghai">上海 Shanghai (UTC+8)</option>
+                            <option value="America/New_York">纽约 New York (EST/EDT)</option>
+                            <option value="America/Los_Angeles">旧金山 San Francisco (PST/PDT)</option>
+                        </select>
+                        <button onclick="convertTime()">转换 / Convert</button>
+                    </div>
+                </div>
+                <div class="result" id="result">
+                    <div class="result-item">
+                        <strong>上海时间 / Shanghai：</strong>
+                        <span id="result-shanghai">--</span>
+                    </div>
+                    <div class="result-item">
+                        <strong>纽约时间 / New York：</strong>
+                        <span id="result-ny">--</span>
+                    </div>
+                    <div class="result-item">
+                        <strong>旧金山时间 / San Francisco：</strong>
+                        <span id="result-sf">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 时区配置
+        const timezones = {
+            shanghai: {
+                name: '上海',
+                tz: 'Asia/Shanghai',
+                flag: '🇨🇳'
+            },
+            ny: {
+                name: '纽约',
+                tz: 'America/New_York',
+                flag: '🇺🇸'
+            },
+            sf: {
+                name: '旧金山',
+                tz: 'America/Los_Angeles',
+                flag: '🇺🇸'
+            }
+        };
+
+        // 格式化时间显示
+        function formatTime(date, timezone) {
+            const formatter = new Intl.DateTimeFormat('zh-CN', {
+                timeZone: timezone,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            return formatter.format(date);
+        }
+
+        // 格式化日期显示
+        function formatDate(date, timezone) {
+            const formatter = new Intl.DateTimeFormat('zh-CN', {
+                timeZone: timezone,
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                weekday: 'long'
+            });
+            return formatter.format(date);
+        }
+
+        // 获取时区信息（包括DST）
+        function getTimezoneInfo(date, timezone) {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                timeZoneName: 'short'
+            });
+            const parts = formatter.formatToParts(date);
+            const tzName = parts.find(part => part.type === 'timeZoneName')?.value || '';
+            
+            // 判断是否在夏令时
+            // 通过比较1月和7月的偏移量来判断
+            const jan = new Date(date.getFullYear(), 0, 1);
+            const jul = new Date(date.getFullYear(), 6, 1);
+            const stdOffset = getTimezoneOffset(jan, timezone);
+            const dstOffset = getTimezoneOffset(jul, timezone);
+            const currentOffset = getTimezoneOffset(date, timezone);
+            const isDST = currentOffset !== stdOffset && currentOffset === dstOffset;
+
+            return {
+                name: tzName,
+                isDST: isDST,
+                offset: currentOffset
+            };
+        }
+
+        // 获取时区偏移量（分钟）
+        function getTimezoneOffset(date, timezone) {
+            const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+            const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+            return (tzDate - utcDate) / (1000 * 60);
+        }
+
+        // 更新实时时间显示
+        function updateRealTime() {
+            const now = new Date();
+
+            // 更新上海时间
+            const shanghaiTime = formatTime(now, timezones.shanghai.tz);
+            const shanghaiDate = formatDate(now, timezones.shanghai.tz);
+            const shanghaiInfo = getTimezoneInfo(now, timezones.shanghai.tz);
+            document.getElementById('shanghai-time').textContent = shanghaiTime;
+            document.getElementById('shanghai-date').textContent = shanghaiDate;
+            document.getElementById('shanghai-tz').textContent = `Asia/Shanghai (${shanghaiInfo.name})`;
+
+            // 更新纽约时间
+            const nyTime = formatTime(now, timezones.ny.tz);
+            const nyDate = formatDate(now, timezones.ny.tz);
+            const nyInfo = getTimezoneInfo(now, timezones.ny.tz);
+            document.getElementById('ny-time').textContent = nyTime;
+            document.getElementById('ny-date').textContent = nyDate;
+            document.getElementById('ny-tz').textContent = `America/New_York (${nyInfo.name}${nyInfo.isDST ? ' - 夏令时 DST' : ' - 标准时间 Standard'})`;
+            const nyTag = document.getElementById('ny-dst-tag');
+            if (nyTag) {
+                nyTag.textContent = nyInfo.isDST ? '夏令时 / DST' : '冬令时 / Standard';
+                nyTag.className = `tz-tag ${nyInfo.isDST ? 'dst' : 'std'}`;
+            }
+
+            // 更新旧金山时间
+            const sfTime = formatTime(now, timezones.sf.tz);
+            const sfDate = formatDate(now, timezones.sf.tz);
+            const sfInfo = getTimezoneInfo(now, timezones.sf.tz);
+            document.getElementById('sf-time').textContent = sfTime;
+            document.getElementById('sf-date').textContent = sfDate;
+            document.getElementById('sf-tz').textContent = `America/Los_Angeles (${sfInfo.name}${sfInfo.isDST ? ' - 夏令时 DST' : ' - 标准时间 Standard'})`;
+            const sfTag = document.getElementById('sf-dst-tag');
+            if (sfTag) {
+                sfTag.textContent = sfInfo.isDST ? '夏令时 / DST' : '冬令时 / Standard';
+                sfTag.className = `tz-tag ${sfInfo.isDST ? 'dst' : 'std'}`;
+            }
+        }
+
+        // （已移除“时间模式”相关 UI/逻辑：转换始终按时区规则自动处理 DST）
+
+        // 转换时间
+        function convertTime() {
+            const inputDate = document.getElementById('input-date').value;
+            const inputTime = document.getElementById('input-time').value;
+            const inputTimezone = document.getElementById('input-timezone').value;
+
+            if (!inputDate || !inputTime) {
+                alert('请选择日期并输入时间 / Please select a date and time');
+                return;
+            }
+
+            // 日期格式为 "YYYY-MM-DD"，时间格式为 "HH:mm"
+            const [year, month, day] = inputDate.split('-').map(Number);
+            const [hour, minute] = inputTime.split(':').map(Number);
+
+            // 创建一个Date对象，表示输入时区的这个时间
+            const inputDateUTC = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+            
+            let inputTzOffset;
+            
+            // 使用输入时区在该时刻的真实偏移量（自动包含夏令时/冬令时规则）
+            inputTzOffset = getTimezoneOffset(inputDateUTC, inputTimezone);
+            
+            // 调整UTC时间以匹配输入时区的实际时间
+            const adjustedUTC = new Date(inputDateUTC.getTime() - inputTzOffset * 60000);
+
+            // 格式化显示结果
+            const formatterOptions = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+
+            // 显示上海时间
+            const shanghaiFormatter = new Intl.DateTimeFormat('zh-CN', {
+                ...formatterOptions,
+                timeZone: timezones.shanghai.tz
+            });
+            const shanghaiResult = shanghaiFormatter.format(adjustedUTC);
+            const shanghaiInfo = getTimezoneInfo(adjustedUTC, timezones.shanghai.tz);
+            document.getElementById('result-shanghai').textContent = 
+                `${shanghaiResult} (${shanghaiInfo.name})`;
+
+            // 显示纽约时间
+            const nyFormatter = new Intl.DateTimeFormat('zh-CN', {
+                ...formatterOptions,
+                timeZone: timezones.ny.tz
+            });
+            const nyResult = nyFormatter.format(adjustedUTC);
+            const nyInfo = getTimezoneInfo(adjustedUTC, timezones.ny.tz);
+            const nySuffix = nyInfo.isDST ? ' - 夏令时 DST' : ' - 标准时间 Standard';
+            document.getElementById('result-ny').textContent = 
+                `${nyResult} (${nyInfo.name}${nySuffix})`;
+
+            // 显示旧金山时间
+            const sfFormatter = new Intl.DateTimeFormat('zh-CN', {
+                ...formatterOptions,
+                timeZone: timezones.sf.tz
+            });
+            const sfResult = sfFormatter.format(adjustedUTC);
+            const sfInfo = getTimezoneInfo(adjustedUTC, timezones.sf.tz);
+            const sfSuffix = sfInfo.isDST ? ' - 夏令时 DST' : ' - 标准时间 Standard';
+            document.getElementById('result-sf').textContent = 
+                `${sfResult} (${sfInfo.name}${sfSuffix})`;
+
+            // 显示结果区域
+            document.getElementById('result').classList.add('show');
+        }
+
+        // 初始化：每秒更新实时时间
+        updateRealTime();
+        setInterval(updateRealTime, 1000);
+
+        // （已移除“时间模式”相关 UI/逻辑）
+
+        // 时区改变时更新提示
+
+        // 支持回车键转换
+        document.getElementById('input-date').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertTime();
+            }
+        });
+        document.getElementById('input-time').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertTime();
+            }
+        });
+    </script>
+</body>
+</html>
+
